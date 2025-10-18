@@ -1,0 +1,58 @@
+# Odin compiled executables
+*.exe
+*.out
+*.app
+*.bin
+
+# Odin build artifacts
+*.o
+*.obj
+*.lib
+*.a
+*.so
+*.dll
+*.dylib
+
+# Build directories
+build/
+bin/
+out/
+dist/
+
+# Debug files
+*.pdb
+*.dSYM/
+
+# OS-specific files
+# Windows
+Thumbs.db
+Desktop.ini
+*.stackdump
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+
+# Vim
+*.swp
+*.swo
+*~
+.*.swp
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.
+

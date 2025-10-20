@@ -320,6 +320,10 @@ skyline_get_used_width :: proc(packer: Skyline_Packer) -> i32 {
 	return max_width
 }
 
+skyline_get_size :: proc(packer: Skyline_Packer) -> (i32, i32) {
+	return skyline_get_used_width(packer), skyline_get_used_height(packer)
+}
+
 // Enable or disable auto-resize
 skyline_set_auto_resize :: proc(packer: ^Skyline_Packer, enabled: bool) {
 	packer.auto_resize = enabled

@@ -1,4 +1,4 @@
-package beatlas
+package atlas
 
 import "core:bytes"
 import "core:fmt"
@@ -28,9 +28,11 @@ main :: proc() {
 		return
 	}
 
-	for i in images {
-		fmt.printfln("%v [%vx%v]", i.name, i.width, i.height)
-	}
+    skyline := skyline_packer_init(1024, 512)
+    skyline_pack_images_sorted(&skyline, &images)
+    write_atlas(images, skyline)
+
+    skyline_packer_destroy(&skyline)
 }
 
 load_images :: proc(
@@ -84,4 +86,42 @@ load_images :: proc(
 	}
 
 	return result, true
+}
+
+write_atlas :: proc(images: [dynamic]Image, packer: Skyline_Packer) -> bool {
+    // Compute atlas dimensions
+    atlas_width  := skyline_get_used_width(packer)
+    atlas_height := skyline_get_used_height(packer)
+    
+    // Allocate flat pixel buffer: width * height * channels
+    pixel_count := atlas_width * atlas_height * 4
+    buffer := make([dynamic]u8, pixel_count)
+    defer delete(buffer)
+    
+    // Initialize buffer to transparent black
+    for i in 0..<pixel_count {
+        buffer[i] = 0
+    }
+    
+    // Copy each image’s data into the buffer at its (x,y) position
+    for img in images {
+    	src_stride := img.width * img.channels
+    	dst_stride := atlas_width * 4
+
+        for row in 0..<img.height {
+        	for col in 0..<img.width {
+        		src_index := row * src_stride + col * img.channels
+                dst_index := (img.y + row) * dst_stride + (img.x + col) * 4
+
+                buffer[dst_index] = img.data[src_index]
+                buffer[dst_index + 1] = img.data[src_index + 1]
+                buffer[dst_index + 2] = img.data[src_index + 2]
+                buffer[dst_index + 3] = img.data[src_index + 3]
+        	}
+        }
+    }
+    
+    stbi.write_png("atlas.png", atlas_width, atlas_height, 4, raw_data(buffer), atlas_width * 4)
+
+    return true
 }

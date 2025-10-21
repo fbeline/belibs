@@ -1,18 +1,26 @@
 package atlas
 
+import "core:encoding/json"
 import "core:fmt"
 import "core:os"
-import "core:encoding/json"
+import "core:slice"
+import "core:strings"
 
 Entry :: struct {
 	x, y:          i32,
 	width, height: i32,
 }
 
+Animation :: struct {
+	fps:    int,
+	frames: [dynamic]Entry,
+}
+
 Output :: struct {
 	width, height: i32,
 	size:          int,
-	entries:       map[string]Entry,
+	images:        map[string]Entry,
+	animations:    map[string]Animation,
 }
 
 write_atlas_json :: proc(images: [dynamic]Image, width: i32, height: i32) {
@@ -22,8 +30,28 @@ write_atlas_json :: proc(images: [dynamic]Image, width: i32, height: i32) {
 	output.height = height
 	output.size = len(images)
 
+	slice.sort_by(images[:], proc(a, b: Image) -> bool {
+		return a.name < b.name
+	})
+
 	for i in images {
-		output.entries[i.name] = Entry{i.x, i.y, i.width, i.height}
+		slash_index := strings.index(i.name, "/")
+		entry := Entry{i.x, i.y, i.width, i.height}
+		if slash_index >= 0 {
+			key := i.name[0:slash_index]
+			anim, has := &output.animations[key]
+			if !has {
+				output.animations[key] = Animation {
+					fps    = 10,
+					frames = make([dynamic]Entry),
+				}
+				anim = &output.animations[key]
+			}
+
+			append(&anim.frames, entry)
+		} else {
+			output.images[i.name] = entry
+		}
 	}
 
 	json_bytes, err := json.marshal(output)

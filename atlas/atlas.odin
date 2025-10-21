@@ -29,7 +29,7 @@ main :: proc() {
 
 	skyline := skyline_packer_init(1024, 1024)
 	skyline_pack_images_sorted(&skyline, &images)
-	
+
 	width, height := skyline_get_size(skyline)
 	write_atlas(images, width, height)
 	write_atlas_json(images, width, height)
@@ -53,17 +53,22 @@ load_images :: proc(dir_path: string) -> (images: [dynamic]Image, ok: bool) {
 
 	for file_info in file_infos {
 		if file_info.is_dir {
-			// TODO: read nested dirs
-			continue
+			_, name := filepath.split(file_info.fullpath)
+			frames, _ := load_images(file_info.fullpath)
+			for &f, i in frames {
+				a := [?]string { name, "/", f.name }
+				f.name = strings.concatenate(a[:])
+				append(&result, f)
+			}
 		}
 
 		// Check if file is an image (by extension)
 		ext := filepath.ext(file_info.name)
 		if ext == ".png" {
 			image: Image
-			image.name = file_info.name[:len(file_info.name) - 4]
-
 			full_path := filepath.join({dir_path, file_info.name})
+			image.name = filepath.short_stem(full_path)
+
 
 			image.data = stbi.load(
 				strings.clone_to_cstring(full_path),
